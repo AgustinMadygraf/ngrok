@@ -5,6 +5,14 @@ declare(strict_types=1);
 // Archivo: index.php
 // Propósito: Página principal con opciones de navegación.
 
+// Incluir la clase Logger
+require_once __DIR__ . '/lib/Logger.php';
+use App\Lib\Logger;
+
+// Inicializar el logger
+$logger = Logger::getInstance();
+$logger->info('Página principal cargada.');
+
 ?>
 <!DOCTYPE html>
 <html lang="es">

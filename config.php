@@ -5,6 +5,14 @@ declare(strict_types=1);
 // Archivo: config.php
 // Propósito: Centralizar configuraciones del proyecto.
 
+// Incluir la clase Logger
+require_once __DIR__ . '/lib/Logger.php';
+use App\Lib\Logger;
+
+// Inicializar el logger
+$logger = Logger::getInstance();
+$logger->info('Configuración cargada correctamente.');
+
 // Función para cargar variables de entorno desde un archivo .env
 function loadEnv(string $envPath = __DIR__ . '/.env'): void {
     if (!file_exists($envPath)) {
@@ -65,36 +73,40 @@ function cleanCache(): void {
 
 // Modificar la función getForwardingUrl para usar caché
 function getForwardingUrl(): string {
-    // Intentar obtener la URL desde la caché
-    $cachedUrl = getUrlFromCache();
-    if ($cachedUrl !== null) {
-        return $cachedUrl; // Devolver la URL desde la caché si es válida
+    try {
+        $cachedUrl = getUrlFromCache();
+        if ($cachedUrl !== null) {
+            return $cachedUrl;
+        }
+    } catch (Exception $e) {
+        $logger = Logger::getInstance();
+        $logger->error(sprintf('Error al obtener la URL desde la caché: %s', $e->getMessage()));
     }
 
-    // Obtener la URL del endpoint desde la variable de entorno
-    $url = getenv('ENDPOINT_URL') ?: ($_ENV['ENDPOINT_URL'] ?? null);
-    if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
-        throw new Exception('La variable ENDPOINT_URL no está definida o no es una URL válida en el archivo .env.');
+    try {
+        $url = getenv('ENDPOINT_URL') ?: ($_ENV['ENDPOINT_URL'] ?? null);
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            throw new Exception('La variable ENDPOINT_URL no está definida o no es una URL válida.');
+        }
+
+        $response = file_get_contents($url);
+        if ($response === false) {
+            throw new Exception('No se pudo obtener la URL de redirección.');
+        }
+
+        $data = json_decode($response, true);
+        if (!isset($data['endpoint']) || !filter_var($data['endpoint'], FILTER_VALIDATE_URL)) {
+            throw new Exception('La respuesta no contiene un endpoint válido.');
+        }
+
+        $endpointUrl = $data['endpoint'];
+        saveUrlToCache($endpointUrl);
+        return $endpointUrl;
+    } catch (Exception $e) {
+        $logger = Logger::getInstance();
+        $logger->error(sprintf('Error al obtener la URL de redirección: %s', $e->getMessage()));
+        throw $e;
     }
-
-    // Realizar la solicitud HTTP
-    $response = file_get_contents($url);
-    if ($response === false) {
-        throw new Exception('No se pudo obtener la URL de redirección.');
-    }
-
-    // Decodificar la respuesta JSON
-    $data = json_decode($response, true);
-    if (!isset($data['endpoint']) || !filter_var($data['endpoint'], FILTER_VALIDATE_URL)) {
-        throw new Exception('La respuesta no contiene un endpoint válido.');
-    }
-
-    $endpointUrl = $data['endpoint'];
-
-    // Guardar la URL en caché
-    saveUrlToCache($endpointUrl);
-
-    return $endpointUrl; // Devolver la URL obtenida
 }
 
 // Función para guardar la URL en caché con un timestamp
