@@ -11,6 +11,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/Logger.php';
 use App\Lib\Logger;
 
+// Incluir la conexión a la base de datos
+require_once __DIR__ . '/app/models/database.php';
+
 // Inicializar el logger
 $logger = Logger::getInstance();
 $logger->info('Configuración cargada correctamente.');
@@ -73,62 +76,22 @@ function cleanCache(): void {
     }
 }
 
-// Modificar la función getForwardingUrl para usar caché
-function getForwardingUrl(): string {
-    try {
-        $cachedUrl = getUrlFromCache();
-        if ($cachedUrl !== null) {
-            return $cachedUrl;
-        }
-    } catch (Exception $e) {
-        $logger = Logger::getInstance();
-        $logger->error(sprintf('Error al obtener la URL desde la caché: %s', $e->getMessage()));
-    }
+// Función para obtener la última URL del endpoint desde la base de datos
+function getEndpointUrl(): string {
+    $database = new Database();
+    $conn = $database->getConnection();
 
     try {
-        $url = getenv('ENDPOINT_URL') ?: ($_ENV['ENDPOINT_URL'] ?? null);
-        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
-            throw new Exception('La variable ENDPOINT_URL no está definida o no es una URL válida.');
-        }
-
-        $response = file_get_contents($url);
-        if ($response === false) {
-            throw new Exception('No se pudo obtener la URL de redirección.');
-        }
-
-        $data = json_decode($response, true);
-        if (!isset($data['endpoint']) || !filter_var($data['endpoint'], FILTER_VALIDATE_URL)) {
-            throw new Exception('La respuesta no contiene un endpoint válido.');
-        }
-
-        $endpointUrl = $data['endpoint'];
-        saveUrlToCache($endpointUrl);
-        return $endpointUrl;
-    } catch (Exception $e) {
-        $logger = Logger::getInstance();
-        $logger->error(sprintf('Error al obtener la URL de redirección: %s', $e->getMessage()));
-        throw $e;
+        $query = "SELECT url FROM urls ORDER BY id DESC LIMIT 1";
+        $stmt = $conn->prepare($query);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $result ? $result['url'] : 'http://192.168.0.118:5000';
+    } catch (PDOException $e) {
+        // En caso de error, retornar una URL por defecto
+        return 'http://192.168.0.118:5000';
     }
 }
 
-// Función para guardar la URL en caché con un timestamp
-function saveUrlToCache(string $url): bool {
-    $cacheFile = __DIR__ . '/cache/url_cache.json';
-    $now = time();
-    $expirationTime = $now + (int)(getenv('CACHE_EXPIRATION') ?: 3600); // Tiempo de expiración por defecto: 1 hora
-
-    $cacheData = [
-        'url' => $url,
-        'timestamp' => $now,
-        'expires_at' => $expirationTime
-    ];
-
-    return file_put_contents(
-        $cacheFile,
-        json_encode($cacheData, JSON_PRETTY_PRINT),
-        LOCK_EX
-    ) !== false;
-}
-
-// Definir la constante FORWARDING_URL
-define('FORWARDING_URL', getForwardingUrl());
+// Reemplazar la constante FORWARDING_URL por una variable
+$forwardingUrl = getEndpointUrl();

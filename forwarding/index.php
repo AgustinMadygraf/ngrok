@@ -9,8 +9,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../config.php';
 
 // Validar que la URL sea válida antes de redirigir
-if (filter_var(FORWARDING_URL, FILTER_VALIDATE_URL)) {
-    header('Location: ' . FORWARDING_URL);
+if (filter_var($forwardingUrl, FILTER_VALIDATE_URL)) {
+    header('Location: ' . $forwardingUrl);
     exit();
 } else {
     // Manejar el caso de una URL inválida
