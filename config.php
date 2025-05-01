@@ -1,4 +1,6 @@
 <?php
+/* Path: config.php */
+
 // Declarar el modo estricto de PHP
 declare(strict_types=1);
 
