@@ -20,7 +20,8 @@ window.onload = function() {
             })
             .then(data => {
                 console.log('Received data:', data);
-                if (params.get('forward') === 'true') {
+                // Invertido: redirige por defecto, sólo muestra iframe si forward=false
+                if (params.get('forward') !== 'false') {
                     console.log('Redirecting to:', data.url);
                     window.location.href = data.url;
                 } else {
