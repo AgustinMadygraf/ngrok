@@ -33,6 +33,11 @@ window.onload = function() {
             })
             .then(data => {
                 console.log('Received data:', data);
+                if (!data || typeof data.url === 'undefined') {
+                    console.error('No "url" key in response:', data);
+                    container.innerHTML = `<pre style="color:red;">Respuesta inválida del servidor</pre>`;
+                    return;
+                }
                 if (data.url === null && data.redirect) {
                     console.log('No URL found, redirecting to:', data.redirect);
                     window.location.href = data.redirect;
