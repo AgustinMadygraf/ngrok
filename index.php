@@ -1,56 +1,21 @@
 <?php
-// Declarar el modo estricto de PHP
-declare(strict_types=1);
+/*
+Path: index.php
+*/
 
-// Archivo: index.php
-// Propósito: Página principal con opciones de navegación.
+$url = 'https://www.example.com';
 
-// Incluir la clase Logger
-require_once __DIR__ . '/lib/Logger.php';
-use App\Lib\Logger;
-
-// Inicializar el logger
-$logger = Logger::getInstance();
-$logger->info('Página principal cargada.');
-
+if (!isset($_GET['iframe']) || $_GET['iframe'] !== 'true') {
+    header('Location: ' . $url);
+    exit;
+}
 ?>
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Opciones</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin-top: 50px;
-        }
-        .button {
-            display: inline-block;
-            margin: 10px;
-            padding: 10px 20px;
-            font-size: 16px;
-            color: #fff;
-            background-color: #007BFF;
-            border: none;
-            border-radius: 5px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Iframe Example</title>
 </head>
 <body>
-    <h1>Bienvenido!!!</h1>
-    <p>Seleccione una de las siguientes opciones:</p>
-
-    <a href="forwarding/index.php" class="button">Forwarding</a>
-    <p>El módulo de Forwarding permite redirigir solicitudes a otros servicios o URLs.</p>
-
-    <a href="webhook/index.php" class="button">Webhook</a>
-    <p>El módulo de Webhook permite manejar eventos entrantes desde servicios externos.</p>
+    <iframe src="<?php echo $url; ?>" width="100%" height="600"></iframe>
 </body>
 </html>

@@ -1,7 +1,0 @@
-.env
-docs/todo.md
-cache/url_cache.json
-logs/*.log
-vendor/
-.env.development
-.env.production
