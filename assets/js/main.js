@@ -40,15 +40,23 @@ window.onload = function() {
                 }
                 if (data.url === null && data.redirect) {
                     console.log('No URL found, redirecting to:', data.redirect);
-                    window.location.href = data.redirect;
+                    container.innerHTML = `<pre style="color:orange;">No hay URL registrada. Redirigiendo a formulario...</pre>`;
+                    setTimeout(() => {
+                        window.location.href = data.redirect;
+                    }, 2000); // Espera 2 segundos antes de redirigir
                     return;
                 }
-                if (params.get('forward') !== 'false') {
-                    console.log('Redirecting to:', data.url);
-                    window.location.href = data.url;
+                if (typeof data.url === 'string' && data.url !== '') {
+                    if (params.get('forward') !== 'false') {
+                        console.log('Redirecting to:', data.url);
+                        window.location.href = data.url;
+                    } else {
+                        console.log('Embedding iframe with src:', data.url);
+                        container.innerHTML = `<iframe id="myIframe" src="${data.url}" style="border:0;width:100%;height:98vh;display:block;" allowfullscreen></iframe>`;
+                    }
                 } else {
-                    console.log('Embedding iframe with src:', data.url);
-                    container.innerHTML = `<iframe id="myIframe" src="${data.url}" style="border:0;width:100%;height:98vh;display:block;" allowfullscreen></iframe>`;
+                    console.error('URL inválida:', data.url);
+                    container.innerHTML = `<pre style="color:red;">URL inválida recibida del servidor</pre>`;
                 }
             })
             .catch(error => {
