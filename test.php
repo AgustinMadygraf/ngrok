@@ -27,8 +27,7 @@ try {
     $stmt->close();
     $db->close();
 } catch (Exception $e) {
-    $status = 'error';
-    error_log($e->getMessage());
+    $status = 'error: '. $e->getMessage();
 }
 
 echo json_encode(['status' => $status]);
