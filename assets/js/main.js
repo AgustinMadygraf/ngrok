@@ -54,6 +54,9 @@ window.onload = function() {
                         console.log('Embedding iframe with src:', data.url);
                         container.innerHTML = `<iframe id="myIframe" src="${data.url}" style="border:0;width:100%;height:98vh;display:block;" allowfullscreen></iframe>`;
                     }
+                } else if (data.error) {
+                    container.innerHTML = `<pre style="color:red;">Error de conexión: ${data.error}</pre>`;
+                    console.error('Error recibido del backend:', data.error);
                 } else {
                     console.error('URL inválida:', data.url);
                     container.innerHTML = `<pre style="color:red;">URL inválida recibida del servidor</pre>`;
