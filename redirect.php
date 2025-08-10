@@ -4,7 +4,6 @@ Path: redirect.php
 */
 
 header('Content-Type: application/json');
-
 require_once __DIR__ . '/database.php';
 
 try {
@@ -19,5 +18,5 @@ try {
 
     echo json_encode(['url' => $url]);
 } catch (Exception $e) {
-    echo json_encode(['error' => $e->getMessage()]);
+    echo json_encode(['url' => null, 'error' => $e->getMessage()]);
 }
