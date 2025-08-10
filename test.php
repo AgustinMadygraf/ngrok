@@ -4,6 +4,8 @@ header('Content-Type: application/json');
 
 $status = null;
 require_once __DIR__ . '/database.php';
+require_once __DIR__ . '/env.php';
+
 try {
     $db = new Database();
     $conn = $db->getConnection();
@@ -30,4 +32,10 @@ try {
     $status = 'error: '. $e->getMessage();
 }
 
-echo json_encode(['status' => $status]);
+echo json_encode([
+    'status' => $status,
+    'db_host' => DB_HOST,
+    'db_user' => DB_USER,
+    'db_pass' => DB_PASS,
+    'db_name' => DB_NAME
+]);
