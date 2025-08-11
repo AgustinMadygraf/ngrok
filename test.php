@@ -34,8 +34,8 @@ try {
 
 echo json_encode([
     'status' => $status,
-    'db_host' => DB_HOST,
-    'db_user' => DB_USER,
-    'db_pass' => DB_PASS,
-    'db_name' => DB_NAME
+    'db_host' => (isset($DB_HOST) ? $DB_HOST : getenv('DB_HOST')),
+    'db_user' => isset($DB_USER) ? $DB_USER : getenv('DB_USER'),
+    'db_pass' => isset($DB_PASS) ? $DB_PASS : getenv('DB_PASS'),
+    'db_name' => isset($DB_NAME) ? $DB_NAME : getenv('DB_NAME')
 ]);

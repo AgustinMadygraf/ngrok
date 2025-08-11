@@ -1,6 +1,12 @@
 <?php
-define('DB_HOST', 'localhost');
-define('DB_USER', 'usuario');
-define('DB_PASS', 'contraseña');
-define('DB_NAME', 'basededatos');
-define('DB_TABLE', 'tabla');
+/*
+Path: backend/api/example-env.php
+*/
+
+return [
+    'DB_HOST' => 'your_host',
+    'DB_USER' => 'your_user',
+    'DB_PASS' => 'your_pass',
+    'DB_NAME' => 'your_db',
+    'TABLE' => 'your_table'
+];

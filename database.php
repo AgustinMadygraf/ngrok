@@ -4,12 +4,20 @@ Path: database.php
 */
 
 require_once __DIR__ . '/env.php';
+$configPath = __DIR__ . '/env.php';
+$config = require $configPath;
 
 class Database {
     private $conn;
 
     public function __construct() {
-        $this->conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        global $config;
+        $this->conn = new mysqli(
+            $config['DB_HOST'],
+            $config['DB_USER'],
+            $config['DB_PASS'],
+            $config['DB_NAME']
+        );
         if ($this->conn->connect_error) {
             throw new Exception('Database connection failed');
         }
