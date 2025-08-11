@@ -20,5 +20,6 @@ try {
 
     echo json_encode(['success' => true, 'url' => $url]);
 } catch (Exception $e) {
+    error_log(date('[Y-m-d H:i:s] ') . $e->getMessage() . PHP_EOL, 3, __DIR__ . '/error.log');
     echo json_encode(['error' => $e->getMessage()]);
 }
