@@ -25,12 +25,12 @@ try {
     $config = require $configPath;
 
     // // Validar configuración esencial
-    // $requiredKeys = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME'];
-    // foreach ($requiredKeys as $key) {
-    //     if (!isset($config[$key])) {
-    //         throw new RuntimeException("Configuración incompleta: Falta $key");
-    //     }
-    // }
+    $requiredKeys = ['DB_HOST', 'DB_USER', 'DB_PASS', 'DB_NAME'];
+    foreach ($requiredKeys as $key) {
+        if (!isset($config[$key])) {
+            throw new RuntimeException("Configuración incompleta: Falta $key");
+        }
+    }
 
 
     $mysqli = new mysqli(

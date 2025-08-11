@@ -17,4 +17,20 @@ try {
     echo json_encode(['error' => 'Database init error']);
     exit;
 }
-echo json_encode(['message' => 'Database initialized successfully']);
+
+try {
+    $db->ensureTableExists($config['TABLE']);
+} catch (Exception $e) {
+    error_log(date('[Y-m-d H:i:s] ') . 'Table check: ' . $e->getMessage() . PHP_EOL, 3, __DIR__ . '/error.log');
+    echo json_encode(['error' => 'Table check error']);
+    exit;
+}
+
+try {
+    $db->insertUrl($config['TABLE'], $url);
+    $db->close();
+    echo json_encode(['success' => true, 'url' => $url]);
+} catch (Exception $e) {
+    error_log(date('[Y-m-d H:i:s] ') . 'Insert: ' . $e->getMessage() . PHP_EOL, 3, __DIR__ . '/error.log');
+    echo json_encode(['error' => 'Insert error']);
+}

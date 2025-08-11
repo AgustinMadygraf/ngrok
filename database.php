@@ -3,7 +3,6 @@
 Path: database.php
 */
 
-require_once __DIR__ . '/env.php';
 $configPath = __DIR__ . '/env.php';
 $config = require $configPath;
 
