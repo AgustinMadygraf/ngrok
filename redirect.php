@@ -16,12 +16,16 @@ try {
     $url = $db->getLatestUrl( $config['TABLE']);
     $db->close();
 
-    if ($url === null) {
-        echo json_encode(['url' => null, 'redirect' => 'form.html']);
-        exit;
-    }
+    // Recibe el parámetro 'url' y lo usa directamente, sin concatenar
+    $url = isset($_GET['url']) ? $_GET['url'] : null;
 
-    echo json_encode(['url' => $url]);
+    if ($url) {
+        echo json_encode(['url' => $url]);
+    } else {
+        // Si no hay URL, puedes redirigir o mostrar error
+        echo json_encode(['url' => null, 'redirect' => 'form.html']);
+    }
 } catch (Exception $e) {
     echo json_encode(['url' => null, 'error' => $e->getMessage()]);
 }
+?>
