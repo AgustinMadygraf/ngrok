@@ -20,6 +20,19 @@ if (!$USUARIO || !$CLAVE) {
     exit;
 }
 
+if (!isset($_SERVER['PHP_AUTH_USER'])) {
+    if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+        $auth = $_SERVER['HTTP_AUTHORIZATION'];
+    } elseif (isset($_SERVER['REDIRECT_HTTP_AUTHORIZATION'])) {
+        $auth = $_SERVER['REDIRECT_HTTP_AUTHORIZATION'];
+    }
+    if (!empty($auth) && stripos($auth, 'basic') === 0) {
+        list($user, $pw) = explode(':', base64_decode(substr($auth, 6)));
+        $_SERVER['PHP_AUTH_USER'] = $user;
+        $_SERVER['PHP_AUTH_PW'] = $pw;
+    }
+}
+
 if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
     $_SERVER['PHP_AUTH_USER'] !== $USUARIO || $_SERVER['PHP_AUTH_PW'] !== $CLAVE) {
     log_error('Auth', 'Acceso no autorizado', [
