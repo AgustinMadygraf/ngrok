@@ -20,7 +20,13 @@
                 .then(response => response.json())
                 .then(data => {
                     document.getElementById('result').textContent = JSON.stringify(data, null, 2);
-})
+                    // Redirige si la respuesta fue exitosa y contiene la URL
+                    if (data.success && data.url) {
+                        setTimeout(() => {
+                            window.location.href = data.url;
+                        }, 1500); // Espera 1.5 segundos antes de redirigir
+                    }
+                })
                 .catch(error => {
                     document.getElementById('result').textContent = 'Error: ' + error;
                 });

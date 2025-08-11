@@ -1,77 +1,173 @@
 /*
-Path: main.js
+Path: assets/js/main.js
 */
 
-window.onload = function() {
-    console.log('window.onload triggered');
-    const params = new URLSearchParams(window.location.search);
-    const container = document.getElementById('container');
-    const url = 'redirect.php'; // PHP endpoint returns the URL
-    console.log('Fetching:', url);
-    console.log('URLSearchParams:', params.toString());
+class UrlParamsHandler {
+    constructor() {
+        this.params = new URLSearchParams(window.location.search);
+    }
+    
+    getParam(key) {
+        return this.params.get(key);
+    }
+    
+    getAllParams() {
+        return Object.fromEntries(this.params.entries());
+    }
+}
 
-    try {
-        fetch(url)
-            .then(response => {
-                console.log('Fetch response:', response);
-                console.log('Response status:', response.status);
-                console.log('Response redirected:', response.redirected);
-                console.log('Response URL:', response.url);
-                if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
-                return response.text().then(text => {
-                    console.log('Raw response text:', text);
-                    try {
-                        const data = JSON.parse(text);
-                        return data;
-                    } catch (jsonErr) {
-                        console.error('JSON parse error:', jsonErr);
-                        throw new Error('Invalid JSON: ' + jsonErr.message + ' | Raw: ' + text);
-                    }
-                });
-            })
-            .then(data => {
-                console.log('Received data:', data);
-                if (!data || typeof data.url === 'undefined') {
-                    console.error('No "url" key in response:', data);
-                    container.innerHTML = `<pre style="color:red;">Respuesta inválida del servidor</pre>`;
-                    return;
-                }
-                if (data.url === null && data.redirect) {
-                    console.log('No URL found, redirecting to:', data.redirect);
-                    container.innerHTML = `<pre style="color:orange;">No hay URL registrada. Redirigiendo a formulario...</pre>`;
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 2000); // Espera 2 segundos antes de redirigir
-                    return;
-                }
-                if (typeof data.url === 'string' && data.url !== '') {
-                    if (params.get('forward') !== 'false') {
-                        console.log('Redirecting to:', data.url);
-                        window.location.href = data.url;
-                    } else {
-                        console.log('Embedding iframe with src:', data.url);
-                        container.innerHTML = `<iframe id="myIframe" src="${data.url}" style="border:0;width:100%;height:98vh;display:block;" allowfullscreen></iframe>`;
-                    }
-                } else if (data.error) {
-                    container.innerHTML = `<pre style="color:red;">Error de conexión: ${data.error}</pre>`;
-                    console.error('Error recibido del backend:', data.error);
-                } else {
-                    console.error('URL inválida:', data.url);
-                    container.innerHTML = `<pre style="color:red;">URL inválida recibida del servidor</pre>`;
-                }
-            })
-            .catch(error => {
-                console.error('Fetch or processing error:', error);
-                if (container) {
-                    container.innerHTML = `<pre style="color:red;">${error}</pre>`;
-                }
-            });
-    } catch (err) {
-        console.error('Outer try/catch error:', err);
-        if (container) {
-            container.innerHTML = `<pre style="color:red;">${err}</pre>`;
+class ApiFetcher {
+    async fetchData(url) {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`Network error: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            throw new Error(`JSON parse error: ${error.message}`);
         }
     }
+}
+
+class ResponseHandler {
+    constructor(redirectManager, uiRenderer) {
+        this.redirectManager = redirectManager;
+        this.uiRenderer = uiRenderer;
+    }
+    
+    handleResponse(data) {
+        if (!data || typeof data.url === 'undefined') {
+            this.uiRenderer.showError('Respuesta inválida del servidor');
+            return;
+        }
+        
+        if (data.url === null && data.redirect) {
+            this.redirectManager.handleNoUrlCase(data.redirect);
+            return;
+        }
+        
+        if (typeof data.url === 'string' && data.url !== '') {
+            return data.url;
+        }
+        
+        if (data.error) {
+            this.uiRenderer.showError(`Error de conexión: ${data.error}`);
+            return;
+        }
+        
+        this.uiRenderer.showError('URL inválida recibida del servidor');
+    }
+}
+
+class RedirectManager {
+    constructor(uiRenderer) {
+        this.uiRenderer = uiRenderer;
+    }
+    
+    redirect(url, delay = 0) {
+        if (delay > 0) {
+            this.uiRenderer.showMessage(
+                `Redirigiendo a ${url}...`, 
+                'orange'
+            );
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, delay);
+        } else {
+            window.location.href = url;
+        }
+    }
+    
+    handleNoUrlCase(redirectUrl) {
+        this.redirect(redirectUrl, 2000);
+    }
+}
+
+class UIRenderer {
+    constructor(containerId) {
+        this.container = document.getElementById(containerId);
+        if (!this.container) {
+            throw new Error(`Container with ID ${containerId} not found`);
+        }
+    }
+    
+    renderIframe(url) {
+        this.container.innerHTML = `
+            <iframe 
+                id="contentIframe" 
+                src="${url}" 
+                style="border:0; width:100%; height:98vh; display:block;" 
+                allowfullscreen
+            ></iframe>
+        `;
+        
+        const iframe = document.getElementById('contentIframe');
+        let loaded = false;
+        
+        iframe.onload = () => {
+            loaded = true;
+        };
+        
+        setTimeout(() => {
+            if (!loaded) {
+                this.showMessage('El contenido no cargó, redirigiendo...', 'orange');
+                this.redirect('form.html', 1000);
+            }
+        }, 3000);
+    }
+    
+    showError(message) {
+        this.container.innerHTML = `<pre style="color:red;">${message}</pre>`;
+    }
+    
+    showMessage(message, color = 'black') {
+        this.container.innerHTML = `<pre style="color:${color};">${message}</pre>`;
+    }
+    
+    clear() {
+        this.container.innerHTML = '';
+    }
+}
+
+class AppController {
+    constructor() {
+        this.urlParams = new UrlParamsHandler();
+        this.apiFetcher = new ApiFetcher();
+        this.uiRenderer = new UIRenderer('container');
+        this.redirectManager = new RedirectManager(this.uiRenderer);
+        this.responseHandler = new ResponseHandler(
+            this.redirectManager, 
+            this.uiRenderer
+        );
+    }
+    
+    async init() {
+        try {
+            const data = await this.apiFetcher.fetchData('redirect.php');
+            const targetUrl = this.responseHandler.handleResponse(data);
+            
+            if (!targetUrl) return;
+            
+            if (this.urlParams.getParam('forward') !== 'false') {
+                this.redirectManager.redirect(targetUrl);
+            } else {
+                this.uiRenderer.renderIframe(targetUrl);
+            }
+        } catch (error) {
+            this.uiRenderer.showError(error.message);
+        }
+    }
+}
+
+// Inicialización de la aplicación
+window.onload = function() {
+    console.log('Aplicación iniciada');
+    const app = new AppController();
+    app.init();
 };
