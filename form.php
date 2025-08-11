@@ -1,6 +1,18 @@
 <?php
 header('Content-Type: application/json');
 
+$config = require __DIR__ . '/env.php'; 
+$USUARIO = $config['USUARIO'];
+$CLAVE   = $config['CLAVE'];
+
+if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW']) ||
+    $_SERVER['PHP_AUTH_USER'] !== $USUARIO || $_SERVER['PHP_AUTH_PW'] !== $CLAVE) {
+    header('WWW-Authenticate: Basic realm="Acceso restringido"');
+    header('HTTP/1.0 401 Unauthorized');
+    echo json_encode(['error' => 'Acceso no autorizado']);
+    exit;
+}
+
 require_once __DIR__ . '/database.php';
 
 if (!isset($_GET['url']) || empty($_GET['url'])) {
